@@ -1,0 +1,106 @@
+-- Passo 1: Criar o banco de dados
+DROP DATABASE IF EXISTS SistemaControleEstoque;
+CREATE DATABASE SistemaControleEstoque;
+USE SistemaControleEstoque;
+
+-- Passo 2: Criar as tabelas
+
+-- Tabela Fornecedores
+CREATE TABLE Fornecedores (
+    FornecedorID INT AUTO_INCREMENT PRIMARY KEY,
+    Nome VARCHAR(100) NOT NULL,
+    Endereco VARCHAR(255),
+    Telefone VARCHAR(20)
+);
+
+-- Tabela Produtos
+CREATE TABLE Produtos (
+    ProdutoID INT AUTO_INCREMENT PRIMARY KEY,
+    Nome VARCHAR(100) NOT NULL,
+    QuantidadeEmEstoque INT NOT NULL,
+    Preco DECIMAL(10, 2) NOT NULL,
+    FornecedorID INT,
+    FOREIGN KEY (FornecedorID) REFERENCES Fornecedores(FornecedorID)
+);
+
+-- Tabela PedidosReposicao
+CREATE TABLE PedidosReposicao (
+    PedidoID INT AUTO_INCREMENT PRIMARY KEY,
+    ProdutoID INT,
+    Quantidade INT NOT NULL,
+    DataPedido DATE NOT NULL,
+    DataRecebimento DATE,
+    FOREIGN KEY (ProdutoID) REFERENCES Produtos(ProdutoID)
+);
+
+-- Passo 3: Inserir dados nas tabelas
+
+-- Inserir dados na tabela Fornecedores
+INSERT INTO Fornecedores (Nome, Endereco, Telefone) VALUES
+('Fornecedor A', 'Rua A, 123', '111-222-333'),
+('Fornecedor B', 'Avenida B, 456', '444-555-666'),
+('Fornecedor C', 'Praça C, 789', '777-888-999');
+
+-- Inserir dados na tabela Produtos
+INSERT INTO Produtos (Nome, QuantidadeEmEstoque, Preco, FornecedorID) VALUES 
+('Produto X', 100, 19.99, 1),
+('Produto Y', 50, 29.99, 2),
+('Produto Z', 200, 9.99, 3),
+('Produto W', 75, 14.99, 1),
+('Produto V', 30, 39.99, 2);
+
+-- Inserir dados na tabela PedidosReposicao
+INSERT INTO PedidosReposicao (ProdutoID, Quantidade, DataPedido, DataRecebimento) VALUES 
+(1, 50, '2024-08-01', NULL),
+(2, 20, '2024-08-05', '2024-08-10'),
+(3, 100, '2024-08-15', NULL),
+(4, 30, '2024-08-20', NULL),
+(5, 15, '2024-08-25', '2024-08-30');
+
+-- Passo 4: Consultas de dados
+
+-- Verificar os produtos em estoque
+SELECT Nome, QuantidadeEmEstoque, Preco
+FROM Produtos;
+
+-- Consultar pedidos de reposição feitos
+SELECT PedidosReposicao.PedidoID, Produtos.Nome AS Produto, Quantidade, DataPedido, DataRecebimento
+FROM PedidosReposicao
+JOIN Produtos ON PedidosReposicao.ProdutoID = Produtos.ProdutoID;
+
+-- Informações sobre os fornecedores
+SELECT Fornecedores.Nome, Fornecedores.Endereco, Fornecedores.Telefone, COUNT(Produtos.ProdutoID) AS TotalProdutos
+FROM Fornecedores
+LEFT JOIN Produtos ON Fornecedores.FornecedorID = Produtos.FornecedorID
+GROUP BY Fornecedores.Nome, Fornecedores.Endereco, Fornecedores.Telefone;
+
+-- Passo 5: Atualizar dados
+
+-- Atualizar a quantidade de produtos em estoque após receber um novo pedido de reposição
+UPDATE Produtos
+SET QuantidadeEmEstoque = QuantidadeEmEstoque + 50
+WHERE ProdutoID = 1;
+
+-- Passo 6: Excluir dados
+
+-- Excluir um produto descontinuado e seus pedidos de reposição associados
+-- Primeiro, removemos os pedidos de reposição associados ao produto
+DELETE FROM PedidosReposicao
+WHERE ProdutoID = 1;
+
+-- Em seguida, removemos o produto
+DELETE FROM Produtos
+WHERE ProdutoID = 1;
+
+-- Consultas Avançadas
+
+-- Relatório de produtos com baixo estoque (estoque menor que 50 unidades)
+SELECT Nome, QuantidadeEmEstoque, Preco
+FROM Produtos
+WHERE QuantidadeEmEstoque < 50;
+
+-- Relatório de fornecedores com produtos em estoque
+SELECT Fornecedores.Nome, COUNT(Produtos.ProdutoID) AS TotalProdutos
+FROM Fornecedores
+JOIN Produtos ON Fornecedores.FornecedorID = Produtos.FornecedorID
+GROUP BY Fornecedores.Nome;
